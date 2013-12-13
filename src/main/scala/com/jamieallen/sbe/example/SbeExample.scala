@@ -25,12 +25,8 @@ object SbeExample extends App {
     case Failure(e) =>
       println(e)
       System.exit(-1)
-    case Success(s) =>
-      s match {
-        case (vehicleCode, manufacturerCode, make, model) => {
-          encodeDecode(vehicleCode, manufacturerCode, make, model)
-        }
-      }
+    case Success((vehicleCode, manufacturerCode, make, model)) =>
+      encodeDecode(vehicleCode, manufacturerCode, make, model)
   }
   
   private def encodeDecode(vehicleCode: Array[Byte], 
@@ -126,6 +122,7 @@ object SbeExample extends App {
                      bufferOffset: Int,
                      actingBlockLength: Int,
                      actingVersion: Int) {
+    
     val buffer = Array.ofDim[Byte](128)
     val sb = new StringBuilder
 
@@ -161,15 +158,16 @@ object SbeExample extends App {
     sb.append(s"\ncar.engine.fuel=${new String(buffer, 0, engine.getFuel(buffer, 0, buffer.length), "ASCII")}")
 
     {
+      // Code block to limit scope of implicit conversion, even though I'm using
+      // a facility that forces me to be explicit about it (I'm OCD about this)
       import scala.collection.convert.decorateAsScala.asScalaIteratorConverter
-	    car.fuelFigures.asScala.foreach { fuelFigures =>
-	      sb.append(s"\ncar.fuelFigures.speed=${fuelFigures.speed}")
-	      sb.append(s"\ncar.fuelFigures.mpg=${fuelFigures.mpg}")
+      car.fuelFigures.asScala.foreach { fuelFigures =>
+        sb.append(s"\ncar.fuelFigures.speed=${fuelFigures.speed}")
+        sb.append(s"\ncar.fuelFigures.mpg=${fuelFigures.mpg}")
       }
 
       car.performanceFigures.asScala.foreach { performanceFigures =>
         sb.append(s"\ncar.performanceFigures.octaneRating=${performanceFigures.octaneRating}")
-
         performanceFigures.acceleration.asScala.foreach { acceleration =>
           sb.append("\ncar.performanceFigures.acceleration.mph=").append(acceleration.mph)
           sb.append("\ncar.performanceFigures.acceleration.seconds=").append(acceleration.seconds)
@@ -181,7 +179,6 @@ object SbeExample extends App {
       new String(buffer, 0, car.getMake(buffer, 0, buffer.length), Car.makeCharacterEncoding))
     sb.append("\ncar.model=").append(
       new String(buffer, 0, car.getModel(buffer, 0, buffer.length), Car.modelCharacterEncoding))
-
     sb.append("\ncar.size=").append(car.size)
 
     println(sb)
