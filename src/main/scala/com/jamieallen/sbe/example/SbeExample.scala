@@ -139,7 +139,7 @@ object SbeExample extends App {
 
     sb.append("\ncar.someNumbers=")
     for (i <- 0 to (Car.someNumbersLength - 1))
-    	sb.append(car.someNumbers(i)).append(", ")
+      sb.append(car.someNumbers(i)).append(", ")
 
     sb.append("\ncar.vehicleCode=")
     for (i <- 0 to (Car.vehicleCodeLength - 1))
@@ -168,17 +168,19 @@ object SbeExample extends App {
       }
 
       car.performanceFigures.asScala.foreach { performanceFigures =>
-	      sb.append(s"\ncar.performanceFigures.octaneRating=${performanceFigures.octaneRating}")
+        sb.append(s"\ncar.performanceFigures.octaneRating=${performanceFigures.octaneRating}")
 
-	      performanceFigures.acceleration.asScala.foreach { acceleration =>
-	        sb.append("\ncar.performanceFigures.acceleration.mph=").append(acceleration.mph)
-	        sb.append("\ncar.performanceFigures.acceleration.seconds=").append(acceleration.seconds)
-	      }
+        performanceFigures.acceleration.asScala.foreach { acceleration =>
+          sb.append("\ncar.performanceFigures.acceleration.mph=").append(acceleration.mph)
+          sb.append("\ncar.performanceFigures.acceleration.seconds=").append(acceleration.seconds)
+        }
       }
     }
 
-    sb.append("\ncar.make=").append(new String(buffer, 0, car.getMake(buffer, 0, buffer.length), Car.makeCharacterEncoding))
-    sb.append("\ncar.model=").append(new String(buffer, 0, car.getModel(buffer, 0, buffer.length), Car.modelCharacterEncoding))
+    sb.append("\ncar.make=").append(
+      new String(buffer, 0, car.getMake(buffer, 0, buffer.length), Car.makeCharacterEncoding))
+    sb.append("\ncar.model=").append(
+      new String(buffer, 0, car.getModel(buffer, 0, buffer.length), Car.modelCharacterEncoding))
 
     sb.append("\ncar.size=").append(car.size)
 
