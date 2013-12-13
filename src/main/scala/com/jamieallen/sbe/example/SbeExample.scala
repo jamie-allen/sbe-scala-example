@@ -33,39 +33,39 @@ object SbeExample extends App {
   }
   
   private def encodeDecode(vehicleCode: Array[Byte], manufacturerCode: Array[Byte], make: Array[Byte], model: Array[Byte]) {
-	  val messageHeader = new MessageHeader() 
-	  val CAR = new Car()
+    val messageHeader = new MessageHeader
+    val car = new Car
 	
-	  val byteBuffer = ByteBuffer.allocateDirect(4096)
-	  val directBuffer = new DirectBuffer(byteBuffer)
-	  val messageTemplateVersion: Short = 0
+    val byteBuffer = ByteBuffer.allocateDirect(4096)
+    val directBuffer = new DirectBuffer(byteBuffer)
+    val messageTemplateVersion: Short = 0
 	
-	  // Setup for encoding a message
-	  messageHeader.wrap(directBuffer, 0, messageTemplateVersion)
-	                      .blockLength(CAR.blockLength)
-	                      .templateId(CAR.templateId)
-	                      .version(CAR.templateVersion)
+    // Setup for encoding a message
+    messageHeader.wrap(directBuffer, 0, messageTemplateVersion)
+                 .blockLength(car.blockLength)
+                 .templateId(car.templateId)
+                 .version(car.templateVersion)
 	
-	  val encodingLength = messageHeader.size() + encode(CAR, directBuffer, messageHeader.size(), vehicleCode, manufacturerCode, make, model)
+    val encodingLength = messageHeader.size() + encode(car, directBuffer, messageHeader.size(), vehicleCode, manufacturerCode, make, model)
 	
-	  // Optionally write the encoded buffer to a file for decoding by the On-The-Fly decoder
-	  val encodingFName = System.getProperty(encodingFilename)
-	  if (encodingFName != null) {
-	    val channel = new FileOutputStream(encodingFName).getChannel()
-	    byteBuffer.limit(encodingLength)
-	    channel.write(byteBuffer)
-	  }
+    // Optionally write the encoded buffer to a file for decoding by the On-The-Fly decoder
+    val encodingFName = System.getProperty(encodingFilename)
+    if (encodingFName != null) {
+      val channel = new FileOutputStream(encodingFName).getChannel()
+      byteBuffer.limit(encodingLength)
+      channel.write(byteBuffer)
+    }
 	
-	  // Decode the encoded message
-	  messageHeader.wrap(directBuffer, 0, messageTemplateVersion)
+    // Decode the encoded message
+    messageHeader.wrap(directBuffer, 0, messageTemplateVersion)
 	
-	  // Lookup the applicable flyweight to decode this type of message based on templateId and version.
-	  val templateId = messageHeader.templateId()
-	  val actingVersion: Short = messageHeader.version()
-	  val actingBlockLength = messageHeader.blockLength()
+    // Lookup the applicable flyweight to decode this type of message based on templateId and version.
+    val templateId = messageHeader.templateId()
+    val actingVersion: Short = messageHeader.version()
+    val actingBlockLength = messageHeader.blockLength()
 	
-	  val decodeBufferOffset = messageHeader.size();
-	  decode(CAR, directBuffer, decodeBufferOffset, actingBlockLength, actingVersion);
+    val decodeBufferOffset = messageHeader.size();
+    decode(car, directBuffer, decodeBufferOffset, actingBlockLength, actingVersion);
   }
 
   private def encode(car: Car, directBuffer: DirectBuffer, bufferOffset: Int, vehicleCode: Array[Byte], manufacturerCode: Array[Byte], make: Array[Byte], model: Array[Byte]): Int = {
