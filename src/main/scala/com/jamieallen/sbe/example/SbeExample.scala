@@ -57,9 +57,9 @@ object SbeExample extends App {
     // Optionally write the encoded buffer to a file for decoding by the On-The-Fly decoder
     System.getProperty(encodingFilename) match {
       case encodingFName if encodingFName != null => 
-	      val channel = new FileOutputStream(encodingFName).getChannel
-	      byteBuffer.limit(encodingLength)
-	      channel.write(byteBuffer)
+        val channel = new FileOutputStream(encodingFName).getChannel
+        byteBuffer.limit(encodingLength)
+        channel.write(byteBuffer)
       case _ =>
     }
 	
