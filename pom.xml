@@ -21,6 +21,10 @@
             <artifactId>jmh-core</artifactId>
             <version>0.3.1</version>
         </dependency>
+        <!-- 
+             NOTE: These dependencies are just to leverage the JARs I've compiled in the lib folder, 
+             and must be updated every time I update the JARs with new builds of SBE and the example classes 
+        -->
         <dependency>
             <groupId>org.jamieallen</groupId>
             <artifactId>sbe-lib</artifactId>
@@ -36,6 +40,41 @@
             <systemPath>${project.basedir}/lib/sbe-java-examples.jar</systemPath>
         </dependency>
     </dependencies>
+    <build>
+        <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>3.1.6</version>
+                <configuration>
+                    <recompileMode>incremental</recompileMode>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>microbenchmarks</finalName>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.openjdk.jmh.Main</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+<!-- 
     <build>
         <pluginManagement>
             <plugins>
@@ -74,4 +113,5 @@
             </plugin>
         </plugins>
     </build>
+-->
 </project>

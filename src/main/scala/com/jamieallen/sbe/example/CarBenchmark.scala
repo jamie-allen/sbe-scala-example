@@ -57,7 +57,6 @@ object CarBenchmark {
     val bufferIndex = state.bufferIndex
 
     encode(messageHeader, car, buffer, bufferIndex)
-
     car.size
   }
 
@@ -70,7 +69,6 @@ object CarBenchmark {
     val tempBuffer = state.tempBuffer
 
     decode(messageHeader, car, buffer, bufferIndex, tempBuffer)
-
     car.size
   }
 
