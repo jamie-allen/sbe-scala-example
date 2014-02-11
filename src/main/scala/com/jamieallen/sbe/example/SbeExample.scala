@@ -1,16 +1,18 @@
 package com.jamieallen.sbe.example
 
-import uk.co.real_logic.sbe.generation.java.DirectBuffer
+import baseline._
 import java.io.{ FileOutputStream, UnsupportedEncodingException }
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import scala.util.{ Try, Failure, Success }
-
-import baseline._
+import uk.co.real_logic.sbe.codec.java.DirectBuffer
 
 object SbeExample extends App {
   private val encodingFilename: String = "sbe.encoding.filename"
-    
+  private var make, model, manufacturerCode, vehicleCode: Array[Byte] = null
+  private val messageHeader = new MessageHeader()
+  private val car = new Car()
+
   // Convert four Try's into a single Try of 
   // a tuple of four Array[Byte] for simplicity
   val baseValues = for {
@@ -25,52 +27,56 @@ object SbeExample extends App {
     case Failure(e) =>
       println(e)
       System.exit(-1)
-    case Success((vehicleCode, manufacturerCode, make, model)) =>
+    case Success((vc: Array[Byte], mc: Array[Byte], ma: Array[Byte], mo: Array[Byte])) =>
+      make = ma
+      model = mo
+      manufacturerCode = mc
+      vehicleCode = vc
       encodeDecode(vehicleCode, manufacturerCode, make, model)
   }
-  
-  private def encodeDecode(vehicleCode: Array[Byte], 
-                           manufacturerCode: Array[Byte], 
-                           make: Array[Byte], 
-                           model: Array[Byte]) {
-    val messageHeader = new MessageHeader
-    val car = new Car
-	
+
+  private def encodeDecode(vehicleCode: Array[Byte],
+    manufacturerCode: Array[Byte],
+    make: Array[Byte],
+    model: Array[Byte]) {
+    val messageHeader = new MessageHeader()
+    val car = new Car()
+
     val byteBuffer = ByteBuffer.allocateDirect(4096)
     val directBuffer = new DirectBuffer(byteBuffer)
     val messageTemplateVersion: Short = 0
-	
+
     // Setup for encoding a message
     messageHeader.wrap(directBuffer, 0, messageTemplateVersion)
-                 .blockLength(car.blockLength)
-                 .templateId(car.templateId)
-                 .version(car.templateVersion)
-	
-    val encodingLength = messageHeader.size + encode(car, 
-                                                     directBuffer, 
-                                                     messageHeader.size, 
-                                                     vehicleCode, 
-                                                     manufacturerCode, 
-                                                     make, 
-                                                     model)
-	
+      .blockLength(car.blockLength)
+      .templateId(car.templateId)
+      .version(car.templateVersion)
+
+    val encodingLength = messageHeader.size + encode(car,
+      directBuffer,
+      messageHeader.size,
+      vehicleCode,
+      manufacturerCode,
+      make,
+      model)
+
     // Optionally write the encoded buffer to a file for decoding by the On-The-Fly decoder
     System.getProperty(encodingFilename) match {
-      case encodingFName if encodingFName != null => 
+      case encodingFName if encodingFName != null =>
         val channel = new FileOutputStream(encodingFName).getChannel
         byteBuffer.limit(encodingLength)
         channel.write(byteBuffer)
       case _ =>
     }
-	
+
     // Decode the encoded message
     messageHeader.wrap(directBuffer, 0, messageTemplateVersion)
-	
+
     // Lookup the applicable flyweight to decode this type of message based on templateId and version.
     val templateId = messageHeader.templateId
     val actingVersion: Short = messageHeader.version
     val actingBlockLength = messageHeader.blockLength
-	
+
     val decodeBufferOffset = messageHeader.size
     decode(car, directBuffer, decodeBufferOffset, actingBlockLength, actingVersion)
   }
@@ -79,50 +85,50 @@ object SbeExample extends App {
     val srcOffset = 0
 
     car.wrapForEncode(directBuffer, bufferOffset).
-       serialNumber(1234).
-       modelYear(2013).
-       available(BooleanType.TRUE).
-       code(Model.A).
-       putVehicleCode(vehicleCode, srcOffset)
+      serialNumber(1234).
+      modelYear(2013).
+      available(BooleanType.TRUE).
+      code(Model.A).
+      putVehicleCode(vehicleCode, srcOffset)
 
-    for (n <- 0 to (Car.someNumbersLength - 1)) 
+    for (n <- 0 to (Car.someNumbersLength - 1))
       car.someNumbers(n, n)
 
     car.extras.clear
-              .cruiseControl(true)
-              .sportsPack(true)
-              .sunRoof(false)
+      .cruiseControl(true)
+      .sportsPack(true)
+      .sunRoof(false)
 
     car.engine.capacity(2000)
-                .numCylinders(4.asInstanceOf[Short])
-                .putManufacturerCode(manufacturerCode, srcOffset)
+      .numCylinders(4.asInstanceOf[Short])
+      .putManufacturerCode(manufacturerCode, srcOffset)
 
     car.fuelFiguresCount(3).next.speed(30).mpg(35.9f)
-                           .next.speed(55).mpg(49.0f)
-                           .next.speed(75).mpg(40.0f)
+      .next.speed(55).mpg(49.0f)
+      .next.speed(75).mpg(40.0f)
 
     val perfFigures = car.performanceFiguresCount(2)
     perfFigures.next.octaneRating(95.asInstanceOf[Short])
-                      .accelerationCount(3).next.mph(30).seconds(4.0f)
-                                           .next.mph(60).seconds(7.5f)
-                                           .next.mph(100).seconds(12.2f)
+      .accelerationCount(3).next.mph(30).seconds(4.0f)
+      .next.mph(60).seconds(7.5f)
+      .next.mph(100).seconds(12.2f)
     perfFigures.next.octaneRating(99.asInstanceOf[Short])
-                      .accelerationCount(3).next.mph(30).seconds(3.8f)
-                                           .next.mph(60).seconds(7.1f)
-                                           .next.mph(100).seconds(11.8f)
+      .accelerationCount(3).next.mph(30).seconds(3.8f)
+      .next.mph(60).seconds(7.1f)
+      .next.mph(100).seconds(11.8f)
 
     car.putMake(make, srcOffset, make.length)
     car.putModel(model, srcOffset, model.length)
 
     car.size
   }
-  
+
   private def decode(car: Car,
-                     directBuffer: DirectBuffer,
-                     bufferOffset: Int,
-                     actingBlockLength: Int,
-                     actingVersion: Int) {
-    
+    directBuffer: DirectBuffer,
+    bufferOffset: Int,
+    actingBlockLength: Int,
+    actingVersion: Int) {
+
     val buffer = Array.ofDim[Byte](128)
     val sb = new StringBuilder
 
