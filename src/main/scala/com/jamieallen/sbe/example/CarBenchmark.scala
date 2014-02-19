@@ -46,33 +46,33 @@ object CarBenchmark {
     }
   }
 
-  @State(Scope.Benchmark)
-  val state = new MyState()
+  //  @State(Scope.Benchmark)
+  //  val state = new MyState()
+  //
+  //  @GenerateMicroBenchmark
+  //  def testEncode(state: MyState) = {
+  //    val car = state.car
+  //    val messageHeader = state.messageHeader
+  //    val buffer = state.encodeBuffer
+  //    val bufferIndex = state.bufferIndex
+  //
+  //    encode(messageHeader, car, buffer, bufferIndex)
+  //    car.size
+  //  }
+  //
+  //  @GenerateMicroBenchmark
+  //  def testDecode(state: MyState) = {
+  //    val car = state.car
+  //    val messageHeader = state.messageHeader
+  //    val buffer = state.decodeBuffer
+  //    val bufferIndex = state.bufferIndex
+  //    val tempBuffer = state.tempBuffer
+  //
+  //    decode(messageHeader, car, buffer, bufferIndex, tempBuffer)
+  //    car.size
+  //  }
 
-  @GenerateMicroBenchmark
-  def testEncode(state: MyState) = {
-    val car = state.car
-    val messageHeader = state.messageHeader
-    val buffer = state.encodeBuffer
-    val bufferIndex = state.bufferIndex
-
-    encode(messageHeader, car, buffer, bufferIndex)
-    car.size
-  }
-
-  @GenerateMicroBenchmark
-  def testDecode(state: MyState) = {
-    val car = state.car
-    val messageHeader = state.messageHeader
-    val buffer = state.decodeBuffer
-    val bufferIndex = state.bufferIndex
-    val tempBuffer = state.tempBuffer
-
-    decode(messageHeader, car, buffer, bufferIndex, tempBuffer)
-    car.size
-  }
-
-  private def encode(messageHeader: MessageHeader,
+  def encode(messageHeader: MessageHeader,
     car: Car,
     buffer: DirectBuffer,
     bufferIndex: Int) = {
@@ -113,7 +113,7 @@ object CarBenchmark {
     car.putModel(model, 0, model.length)
   }
 
-  private def decode(messageHeader: MessageHeader,
+  def decode(messageHeader: MessageHeader,
     car: Car,
     buffer: DirectBuffer,
     bufferIndex: Int,
