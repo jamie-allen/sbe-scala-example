@@ -88,7 +88,7 @@ object CarBenchmark {
       .available(BooleanType.TRUE)
       .putVehicleCode(vehicleCode, 0)
 
-    for (i <- 0 to Car.someNumbersLength)
+    for (i <- 0 to (Car.someNumbersLength - 1))
       car.someNumbers(i, i)
 
     car.extras.clear.sportsPack(true).sunRoof(true)
@@ -130,10 +130,10 @@ object CarBenchmark {
     car.available
     car.code
 
-    for (i <- 0 to Car.someNumbersLength)
+    for (i <- 0 to (Car.someNumbersLength - 1))
       car.someNumbers(i)
 
-    for (i <- 0 to Car.vehicleCodeLength)
+    for (i <- 0 to (Car.vehicleCodeLength - 1))
       car.vehicleCode(i)
 
     val extras = car.extras
@@ -145,7 +145,7 @@ object CarBenchmark {
     engine.capacity
     engine.numCylinders
     engine.maxRpm
-    for (i <- 0 to Engine.manufacturerCodeLength)
+    for (i <- 0 to (Engine.manufacturerCodeLength - 1))
       engine.manufacturerCode(i)
 
     engine.getFuel(tempBuffer, 0, tempBuffer.length)
