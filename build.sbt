@@ -1,7 +1,13 @@
-scalaVersion := "2.10.3"
+import JmhKeys._
 
-name := "SBE Scala Example"
+name := """sbe-scala-example"""
 
-version := "0.2-SNAPSHOT"
+version := "0.3-SNAPSHOT"
 
-libraryDependencies += "org.openjdk.jmh" % "jmh-core" % "0.3.2"
+jmhSettings
+
+outputTarget in Jmh := target.value / s"scala-${scalaBinaryVersion.value}"
+
+libraryDependencies ++= Seq(
+							"org.openjdk.jmh" % "jmh-core" % "0.3.2",
+                            "uk.co.real-logic" % "sbe" % "1.0-RC2"))
