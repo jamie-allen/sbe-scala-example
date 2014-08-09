@@ -1,6 +1,6 @@
 package com.jamieallen.sbe.example
 
-import org.openjdk.jmh.annotations.{ GenerateMicroBenchmark, Scope, State }
+import org.openjdk.jmh.annotations.{ Benchmark, Scope, State }
 import uk.co.real_logic.sbe.codec.java.DirectBuffer
 import scala.util.{ Try, Failure, Success }
 import java.io.UnsupportedEncodingException
@@ -32,6 +32,7 @@ object CarBenchmark {
       vehicleCode = vc
   }
 
+  @State(Scope.Benchmark)
   class MyState {
     val bufferIndex = 0
     val car = new Car()
@@ -42,40 +43,11 @@ object CarBenchmark {
     val decodeBuffer = new DirectBuffer(ByteBuffer.allocateDirect(1024))
 
     {
-      CarBenchmark.encode(messageHeader, car, decodeBuffer, bufferIndex);
+      encode(messageHeader, car, decodeBuffer, bufferIndex);
     }
   }
-
-  //  @State(Scope.Benchmark)
-  //  val state = new MyState()
-  //
-  //  @GenerateMicroBenchmark
-  //  def testEncode(state: MyState) = {
-  //    val car = state.car
-  //    val messageHeader = state.messageHeader
-  //    val buffer = state.encodeBuffer
-  //    val bufferIndex = state.bufferIndex
-  //
-  //    encode(messageHeader, car, buffer, bufferIndex)
-  //    car.size
-  //  }
-  //
-  //  @GenerateMicroBenchmark
-  //  def testDecode(state: MyState) = {
-  //    val car = state.car
-  //    val messageHeader = state.messageHeader
-  //    val buffer = state.decodeBuffer
-  //    val bufferIndex = state.bufferIndex
-  //    val tempBuffer = state.tempBuffer
-  //
-  //    decode(messageHeader, car, buffer, bufferIndex, tempBuffer)
-  //    car.size
-  //  }
-
-  def encode(messageHeader: MessageHeader,
-    car: Car,
-    buffer: DirectBuffer,
-    bufferIndex: Int) = {
+  
+  def encode(messageHeader: MessageHeader, car: Car, buffer: DirectBuffer, bufferIndex: Int) = {
     messageHeader.wrap(buffer, bufferIndex, 0)
       .templateId(car.templateId)
       .version(car.templateVersion)
@@ -113,11 +85,7 @@ object CarBenchmark {
     car.putModel(model, 0, model.length)
   }
 
-  def decode(messageHeader: MessageHeader,
-    car: Car,
-    buffer: DirectBuffer,
-    bufferIndex: Int,
-    tempBuffer: Array[Byte]) = {
+  def decode(messageHeader: MessageHeader, car: Car, buffer: DirectBuffer, bufferIndex: Int, tempBuffer: Array[Byte]) = {
     messageHeader.wrap(buffer, bufferIndex, 0);
 
     val actingVersion = messageHeader.version
@@ -171,56 +139,29 @@ object CarBenchmark {
     car.getMake(tempBuffer, 0, tempBuffer.length)
     car.getModel(tempBuffer, 0, tempBuffer.length)
   }
+}
 
-  /*
-   * Benchmarks to allow execution outside of JMH.
-   */
-  //  def main(args: Array[String]) = {
-  //    for (i <- 0 to 10) {
-  //      perfTestEncode(i)
-  //      perfTestDecode(i)
-  //    }
-  //  }
-  //
-  //    private static void perfTestEncode(final int runNumber)
-  //    {
-  //        final int reps = 10 * 1000 * 1000;
-  //        final MyState state = new MyState();
-  //        final CarBenchmark benchmark = new CarBenchmark();
-  //
-  //        final long start = System.nanoTime();
-  //        for (int i = 0; i < reps; i++)
-  //        {
-  //            benchmark.testEncode(state);
-  //        }
-  //
-  //        final long totalDuration = System.nanoTime() - start;
-  //
-  //        System.out.printf("%d - %d(ns) average duration for %s.testEncode() - message size %d\n",
-  //                          Integer.valueOf(runNumber),
-  //                          Long.valueOf(totalDuration / reps),
-  //                          benchmark.getClass().getName(),
-  //                          Integer.valueOf(state.car.size() + state.messageHeader.size()));
-  //    }
-  //
-  //    private static void perfTestDecode(final int runNumber)
-  //    {
-  //        final int reps = 10 * 1000 * 1000;
-  //        final MyState state = new MyState();
-  //        final CarBenchmark benchmark = new CarBenchmark();
-  //
-  //        final long start = System.nanoTime();
-  //        for (int i = 0; i < reps; i++)
-  //        {
-  //            benchmark.testDecode(state);
-  //        }
-  //
-  //        final long totalDuration = System.nanoTime() - start;
-  //
-  //        System.out.printf("%d - %d(ns) average duration for %s.testDecode() - message size %d\n",
-  //                          Integer.valueOf(runNumber),
-  //                          Long.valueOf(totalDuration / reps),
-  //                          benchmark.getClass().getName(),
-  //                          Integer.valueOf(state.car.size() + state.messageHeader.size()));
-  //    }
+class CarBenchmark {
+  @Benchmark
+  def testEncode(state: CarBenchmark.MyState) = {
+    val car = state.car
+    val messageHeader = state.messageHeader
+    val buffer = state.encodeBuffer
+    val bufferIndex = state.bufferIndex
+  
+    CarBenchmark.encode(messageHeader, car, buffer, bufferIndex)
+    car.size
+  }
+  
+  @Benchmark
+  def testDecode(state: CarBenchmark.MyState) = {
+    val car = state.car
+    val messageHeader = state.messageHeader
+    val buffer = state.decodeBuffer
+    val bufferIndex = state.bufferIndex
+    val tempBuffer = state.tempBuffer
+  
+    CarBenchmark.decode(messageHeader, car, buffer, bufferIndex, tempBuffer)
+	  car.size
+  }  
 }
