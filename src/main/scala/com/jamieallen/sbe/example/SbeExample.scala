@@ -9,7 +9,6 @@ import uk.co.real_logic.sbe.codec.java.DirectBuffer
 
 object SbeExample extends App {
   private val encodingFilename: String = "sbe.encoding.filename"
-  private var make, model, manufacturerCode, vehicleCode: Array[Byte] = null
   private val messageHeader = new MessageHeader()
   private val car = new Car()
 
@@ -27,21 +26,44 @@ object SbeExample extends App {
     case Failure(e) =>
       println(e)
       System.exit(-1)
-    case Success((vc: Array[Byte], mc: Array[Byte], ma: Array[Byte], mo: Array[Byte])) =>
-      make = ma
-      model = mo
-      manufacturerCode = mc
-      vehicleCode = vc
+    case Success((vehicleCode: Array[Byte], manufacturerCode: Array[Byte], make: Array[Byte], model: Array[Byte])) =>
       encodeDecode(vehicleCode, manufacturerCode, make, model)
+    case _ =>
+      println("No error found, but four byte arrays were not returned from the String to Array[Byte] conversion")
+      System.exit(-1)
   }
 
-  private def encodeDecode(vehicleCode: Array[Byte],
-    manufacturerCode: Array[Byte],
-    make: Array[Byte],
-    model: Array[Byte]) {
+  private def encodeDecode(vehicleCode: Array[Byte], manufacturerCode: Array[Byte], make: Array[Byte], model: Array[Byte]) {
     val messageHeader = new MessageHeader()
     val car = new Car()
 
+    val (directBuffer, messageTemplateVersion) = writeEncodedBytes(vehicleCode, manufacturerCode, make, model, messageHeader, car)
+    readDecodedBytes(messageHeader, car, directBuffer, messageTemplateVersion)
+  }
+
+  private def readDecodedBytes(messageHeader: baseline.MessageHeader, 
+                               car: baseline.Car, 
+                               directBuffer: DirectBuffer, 
+                               messageTemplateVersion: Short): 
+                               Unit = {
+    messageHeader.wrap(directBuffer, 0, messageTemplateVersion)
+
+    // Lookup the applicable fly weight to decode this type of message based on templateId and version.
+    val templateId = messageHeader.templateId
+    val actingVersion: Short = messageHeader.version
+    val actingBlockLength = messageHeader.blockLength
+
+    val decodeBufferOffset = messageHeader.size
+    decode(car, directBuffer, decodeBufferOffset, actingBlockLength, actingVersion)
+  }
+
+  private def writeEncodedBytes(vehicleCode: Array[Byte], 
+                                manufacturerCode: Array[Byte], 
+                                make: Array[Byte], 
+                                model: Array[Byte], 
+                                messageHeader: baseline.MessageHeader, 
+                                car: baseline.Car): 
+                                (DirectBuffer, Short) = {
     val byteBuffer = ByteBuffer.allocateDirect(4096)
     val directBuffer = new DirectBuffer(byteBuffer)
     val messageTemplateVersion: Short = 0
@@ -68,20 +90,17 @@ object SbeExample extends App {
         channel.write(byteBuffer)
       case _ =>
     }
-
-    // Decode the encoded message
-    messageHeader.wrap(directBuffer, 0, messageTemplateVersion)
-
-    // Lookup the applicable flyweight to decode this type of message based on templateId and version.
-    val templateId = messageHeader.templateId
-    val actingVersion: Short = messageHeader.version
-    val actingBlockLength = messageHeader.blockLength
-
-    val decodeBufferOffset = messageHeader.size
-    decode(car, directBuffer, decodeBufferOffset, actingBlockLength, actingVersion)
+    (directBuffer, messageTemplateVersion)
   }
 
-  private def encode(car: Car, directBuffer: DirectBuffer, bufferOffset: Int, vehicleCode: Array[Byte], manufacturerCode: Array[Byte], make: Array[Byte], model: Array[Byte]): Int = {
+  private def encode(car: Car, 
+                     directBuffer: DirectBuffer, 
+                     bufferOffset: Int, 
+                     vehicleCode: Array[Byte], 
+                     manufacturerCode: Array[Byte], 
+                     make: Array[Byte], 
+                     model: Array[Byte]): 
+                     Int = {
     val srcOffset = 0
 
     car.wrapForEncode(directBuffer, bufferOffset).

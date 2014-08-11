@@ -30,6 +30,9 @@ object CarBenchmark {
       model = mo
       manufacturerCode = mc
       vehicleCode = vc
+    case _ =>
+      println("No error found, but four byte arrays were not returned from the String to Array[Byte] conversion")
+      System.exit(-1)
   }
 
   @State(Scope.Benchmark)

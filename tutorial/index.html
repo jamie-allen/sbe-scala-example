@@ -1,10 +1,26 @@
-
-<HTML>
-<HEAD>
-<TITLE>Simple Binary Encoding with Scala Example</TITLE>
-</HEAD>
-<BODY>
+<html>
+<head>
+    <title>Simple Binary Encoding with Scala Example</title>
+</head>
+<body>
 <div>
+<h2>What is Simple Binary Encoding?</h2>
+<p>SBE is a fast, compiled binary serialization format created by <a href=https://twitter.com/mjpt777>Martin Thompson</a> and <a href=https://twitter.com/toddlmontgomery>Todd Montgomery</a>.  What differentiates SBE from other formats (such as Protobufs, Thrift, etc) is that the speed with which it can encode and decode data can be measured in nanoseconds, as opposed to milliseconds.  To find out more about the project, see <a href=https://github.com/real-logic/simple-binary-encoding>its page on GitHub</a>.  Note that SBE is not yet released at version 1.0 yet.</p>
 </div>
-</BODY>
-</HTML>
+<div>
+<h2>The goal</h2>
+<p>To show users how to leverage Scala while utilizing SBE.  The core concepts of encoding and decoding using idiomatic Scala are shown in <code>SbeExample</code> class.  For benchmarking purposes, this project uses <a href=https://github.com/ktoso/sbt-jmh>sbt-jmh</a> by <a href=https://twitter.com/ktosopl>Konrad Malawski</a> to execute the <code>CarBenchmark</code> class and see how fast this encoding and decoding can be performed on your chosen platform/hardware.</p>
+</div>
+<div>
+<h2>SbeExample</h2>
+<p>The logic for <a href='#code/src/main/scala/com/jamieallen/sbe/example/SbeExample.scala' class='shorcut'>SbeExample.scala</a> is fairly straightforward.  The examples in the SBE logic built a "baseline" domain including Car information, which is imported.  We take basic <code>String</code> values for vehicle code, manufacturer, make and model and transform them as <code>Array[Byte]</code>, and then make sure all values were successfully transformed.  If successful, we allocate an off-heap <code>ByteBuffer</code> of 4KB, set up the message header, encode the byte array and write them to the "direct" <code>ByteBuffer</code>.</p>
+<p>To decode, we just have to figure out the offset of the message header and read the buffer from that point, and then decode the bytes into their original <code>Array[Byte]</code> form.  Once we have the individual values, we can apply the proper field encoding to get a String value to print out at the end.</p>
+<p>To execute the SbeExample, you cannot use the traditional <code>sbt run</code> command, as sbt-jmh has leveraged that command to execute the CarBenchmark.  Instead, execute the main in this class using the <code>scala</code> command, or run the class via an IDE.</p>
+</div>
+<div>
+<h2>CarBenchmark</h2>
+<p>The logic for <a href='#code/src/main/scala/com/jamieallen/sbe/example/CarBenchmark.scala' class='shorcut'>CarBenchmark.scala</a> is slightly different.  In this case, we are using the JMH facilities for automatically generating warmed up benchmarks via annotations.  We first must define what state will be used in the benchmark, and then set up the logic to test the encoding and decoding speed.  We then create benchmark methods that will be executed by JMH multiple times to provide clarity into how well each task performs when the JVM has been properly warmed.</p>
+<p>To execute the benchmark, simply run <code>sbt run</code> on the command line at the project root directory, or <code>run</code> at the sbt command prompt.
+</div>
+</body>
+</html>
